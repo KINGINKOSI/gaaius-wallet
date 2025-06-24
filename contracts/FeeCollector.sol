@@ -8,10 +8,8 @@ contract FeeCollector {
         owner = _owner;
     }
 
-    // Accept ETH payments (from minting, services, etc.)
     receive() external payable {}
 
-    // Only owner can withdraw
     function withdraw() external {
         require(msg.sender == owner, "Not owner");
         payable(owner).transfer(address(this).balance);

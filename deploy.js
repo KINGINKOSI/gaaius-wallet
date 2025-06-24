@@ -1,26 +1,32 @@
-const Web3 = require('web3');
-const fs = require('fs');
+require('dotenv').config();
+const { ethers } = require("hardhat");
 
-const web3 = new Web3('http://localhost:8545');
+async function main() {
+    const feeCollectorAddress = process.env.FEE_COLLECTOR_ADDRESS;
+    if (!feeCollectorAddress || !/^0x[a-fA-F0-9]{40}$/.test(feeCollectorAddress)) {
+        throw new Error("FEE_COLLECTOR_ADDRESS is missing or invalid in .env");
+    }
 
-const abi = ;
-const bytecode = '0x';
+    // Deploy FeeCollector
+    const FeeCollector = await ethers.getContractFactory("FeeCollector");
+    const feeCollector = await FeeCollector.deploy(feeCollectorAddress);
+    await feeCollector.deployed();
+    console.log("FeeCollector deployed at:", feeCollector.address);
 
-async function deploy() {
-    const accounts = await web3.eth.getAccounts();
-    console.log('Deploying from account:', accounts[0]);
+    // Deploy ArtNFT with FeeCollector address
+    const ArtNFT = await ethers.getContractFactory("ArtNFT");
+    const artNFT = await ArtNFT.deploy(feeCollector.address);
+    await artNFT.deployed();
+    console.log("ArtNFT deployed at:", artNFT.address);
 
-    const contract = new web3.eth.Contract(abi);
-
-    const deployedContract = await contract.deploy({ data: bytecode })
-        .send({ from: accounts[0], gas: 1500000 });
-
-    console.log('Contract deployed at:', deployedContract.options.address);
-
-    // Save contract address to file
-    fs.writeFileSync('contract-address.txt', deployedContract.options.address);
-    console.log('Contract address saved to contract-address.txt');
-    process.exit(0);
+    // Deploy FeeToken with FeeCollector address
+    const FeeToken = await ethers.getContractFactory("FeeToken");
+    const feeToken = await FeeToken.deploy(feeCollector.address);
+    await feeToken.deployed();
+    console.log("FeeToken deployed at:", feeToken.address);
 }
 
-deploy().catch(console.error);
+main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+});
