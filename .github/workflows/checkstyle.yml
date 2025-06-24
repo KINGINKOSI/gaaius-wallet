@@ -3,6 +3,8 @@ permissions:
   pull-requests: write
   contents: read
 on: pull_request, merge_group
+permissions:
+  contents: read
 
 jobs:
   checkstyle_job:
