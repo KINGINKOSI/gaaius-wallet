@@ -1,0 +1,29 @@
+name: Android lint
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  merge_group:
+jobs:
+  lint:
+    name: Comments lint result on Master
+    runs-on: macos-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: oracle
+          java-version: 21
+          cache: gradle
+      - name: Run detekt
+        run: ./gradlew :app:detekt
+        continue-on-error: true
+      - name: Run Android Lint
+        run: ./gradlew :app:lintAnalyticsDebug

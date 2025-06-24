@@ -1,0 +1,352 @@
+
+plugins {
+    alias(libs.plugins.androidApplication)
+    id("com.worker8.android_lint_reporter") version "2.1.0"
+    id("io.gitlab.arturbosch.detekt") version "1.23.5"
+    id 'jacoco'
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'realm-android'
+apply plugin: 'kotlin-android'
+apply plugin: 'dagger.hilt.android.plugin'
+apply plugin: 'com.worker8.android_lint_reporter'
+apply plugin: 'io.gitlab.arturbosch.detekt'
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "0.8.8"
+}
+
+tasks.withType(Test).configureEach {
+    jacoco.includeNoLocationClasses = true
+    jacoco.excludes = ['jdk.internal.*']
+}
+
+detekt {
+    toolVersion = "1.23.5"
+    buildUponDefaultConfig = true // preconfigure defaults
+    allRules = false // activate all available (even unstable) rules.
+    baseline = file("$projectDir/check/detekt-baseline.xml")
+}
+
+android_lint_reporter {
+    lintFilePath = "./build/reports/lint-results-analyticsDebug.xml"
+    detektFilePath = "./build/reports/detekt/detekt.xml"
+    githubOwner = "GAAIUSWallet"
+    githubRepositoryName = "gaaius-wallet-android"
+    showLog = true // optional - default to false, show extra information, will slow things down
+}
+
+android {
+    namespace 'com.gaaiuswallet.app'
+    compileSdk 34
+
+    sourceSets {
+        main {
+
+        }
+    }
+
+    defaultConfig {
+        applicationId "io.stormbird.wallet"
+        minSdk 24
+        targetSdk 34
+        versionCode 273
+        versionName "3.88"
+
+        android.buildFeatures.buildConfig true
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+        def XInfuraAPI = "XInfuraAPI"
+        //Put your Infura key here, NB with over 30 - 40 users this API key will rate limit, it's only here for bootstrapping a free build
+        def DEFAULT_INFURA_API_KEY = "\"da3717f25f824cc1baa32d812386d93f\""
+        def DEFAULT_OPENSEA_API_KEY = "\"...\""; //Put your OpenSea developer API key in here, otherwise you are reliant on the backup NFT fetch method (which usually works ok)
+        def DEFAULT_POLYGONSCAN_API_KEY = "\"...\""; //Put your Polygonscan developer API key in here to get access to Polygon/Mumbai token discovery and transactions
+        def DEFAULT_WALLETCONNECT_PROJECT_ID = "\"40c6071febfd93f4fe485c232a8a4cd9\""
+        def DEFAULT_AURORA_API_KEY = "\"HFDDY5BNKGXBB82DE2G8S64C3C41B76PYI\""; //Put your Aurorascan.dev API key here - this one will rate limit as it is common
+
+        buildConfigField 'int', 'DB_VERSION', '54'
+
+        buildConfigField "String", XInfuraAPI, DEFAULT_INFURA_API_KEY
+        buildConfigField "String", "WALLETCONNECT_PROJECT_ID", DEFAULT_WALLETCONNECT_PROJECT_ID
+
+        buildConfigField "String", "NOTIFICATION_API_BASE_URL", NOTIFICATION_API_BASE_URL
+
+        ndk {
+            abiFilters "armeabi-v7a", "x86", "x86_64", "arm64-v8a"
+        }
+        packagingOptions {
+            pickFirst 'META-INF/LICENSE.md'
+            pickFirst 'META-INF/NOTICE.md'
+            pickFirst 'META-INF/LICENSE-notice.md'
+            pickFirst 'META-INF/INDEX.LIST'
+            pickFirst 'META-INF/DEPENDENCIES'
+            pickFirst 'solidity/ens/build/AbstractENS.bin'
+        }
+
+        externalNativeBuild {
+            cmake {
+                cFlags "-DIFKEY=" + DEFAULT_INFURA_API_KEY + ""
+                cFlags "-DOSKEY=" + DEFAULT_OPENSEA_API_KEY + ""
+                cFlags "-DPSKEY=" + DEFAULT_POLYGONSCAN_API_KEY + ""
+                cFlags "-DASKEY=" + DEFAULT_AURORA_API_KEY + ""
+                cFlags "-DWCKEY=" + DEFAULT_WALLETCONNECT_PROJECT_ID + ""
+            }
+            cmake {
+                cFlags "-Wno-dev"
+            }
+        }
+    }
+
+    flavorDimensions.add("targetting")
+
+    productFlavors {
+        analytics {
+            dimension "targetting"
+
+            /*
+            Below code is used to include analytics only when Flavor is "No Analytics"
+            This is due to China release where Google services should not be included
+             */
+            apply plugin: 'com.google.gms.google-services'
+            apply plugin: 'com.google.firebase.crashlytics'
+        }
+        noAnalytics {
+            dimension "targetting"
+        }
+    }
+    signingConfigs {
+        release {
+            // Add below 4 properties into ~/.gradle/gradle.properties
+            // Run ./gradlew assembleRelease to build production apk
+            if (project.hasProperty('RELEASE_STORE_FILE')) {
+                storeFile file(RELEASE_STORE_FILE)
+                storePassword RELEASE_STORE_PASSWORD
+                keyAlias RELEASE_KEY_ALIAS
+                keyPassword RELEASE_KEY_PASSWORD
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+        release {
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            if (signingConfigs.release.storeFile) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+    packagingOptions {
+        jniLibs {
+            excludes += ['solidity/*']
+            useLegacyPackaging true
+        }
+        resources {
+            excludes += ['META-INF/NOTICE', 'META-INF/LICENSE', 'META-INF/LICENSE.md', 'META-INF/NOTICE.md', 'META-INF/LICENSE-notice.md', 'solidity/ens/build/*.bin', 'solidity/ens/*.sol', 'solidity/ens/build/*.abi', 'en-mnemonic-word-list.txt', 'solidity/*']
+        }
+    }
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_21
+        sourceCompatibility JavaVersion.VERSION_21
+    }
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+        }
+    }
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        unitTests {
+            returnDefaultValues = true
+            includeAndroidResources = true
+        }
+        animationsDisabled = true
+    }
+    dependenciesInfo {
+        includeInApk false
+        includeInBundle false
+    }
+    buildFeatures {
+        viewBinding true
+    }
+    lint {
+        abortOnError false
+        baseline file('./check/lint-baseline.xml')
+        lintConfig file('./check/lint-rules.xml')
+    }
+    ndkVersion '25.1.8937393'
+}
+
+tasks.register("printVersionName") {
+    doLast {
+        println android.defaultConfig.versionName
+    }
+}
+
+tasks.register("printVersionCode") {
+    doLast {
+        println android.defaultConfig.versionCode
+    }
+}
+
+tasks.register("jacocoAndroidUnitTestReport") {
+    reports {
+        csv.enabled false
+        html.enabled true
+        xml.enabled true
+    }
+    def fileFilter = ['**/R.class', '**/R$*.class', '**/*$ViewInjector*.*', '**/BuildConfig.*', '**/Manifest*.*', '**/*Realm*.*', '**/Generated*.*', '**/*_*.*']
+    def debugTree = fileTree(dir: "**/", excludes: fileFilter)
+    def mainSrc = "${project.projectDir}/src/main/java"
+    
+    sourceDirectories.setFrom(files([mainSrc]))
+    classDirectories.setFrom(files([debugTree]))
+}
+
+dependencies {
+    implementation project(':lib')
+
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(include: ['*.aar'], dir: 'libs')
+
+    //noinspection BomWithoutPlatform,GradleDependency
+    implementation platform('com.fasterxml.jackson:jackson-bom:2.13.5') //Do not upgrade! 2.13.5 is latest library with Android API24 compatibility,
+    implementation 'com.fasterxml.jackson.core:jackson-core'            //The XML code will be removed to use the online engine, so no need to touch
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    implementation libs.slf4j.api
+    implementation libs.core.splashscreen
+
+    // Http client
+    implementation libs.okhttp
+    implementation libs.gson
+
+    implementation libs.appcompat
+    implementation libs.material //'com.google.android.material:material:1.9.0'
+    implementation libs.vectordrawable
+    implementation libs.recyclerview
+    implementation libs.biometric
+    implementation libs.gridlayout
+
+    // Bar code scanning
+    implementation libs.zxing.android.embedded
+    implementation libs.core
+
+    // Sugar
+    implementation libs.constraintlayout
+
+    //coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.5'
+
+    // ReactiveX
+    implementation libs.rxjava
+    implementation libs.rxandroid
+
+    // Keyboard visibility
+    implementation libs.keyboardvisibilityevent
+
+    // Dagger 2
+
+    // dagger-hilt
+    implementation libs.hilt.android
+    implementation libs.annotations
+    annotationProcessor libs.hilt.compiler
+
+    // WebKit - for WebView Dark Mode (NB Can't be upgraded from 1.7.0 until migration to Gradle 8)
+    implementation libs.webkit
+
+    //Use Leak Canary for debug builds only
+    //debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
+
+    // Image Loader
+    implementation libs.glide
+    annotationProcessor libs.compiler
+    implementation libs.guava
+    implementation libs.wallet.core
+    //noinspection UseTomlInstead
+    implementation 'com.github.florent37:TutoShowcase:d8b91be8a2'
+    implementation libs.flexbox.layout
+    implementation libs.kotson
+    implementation libs.mailchimp.sdk.android
+    implementation libs.preference.ktx
+
+    //Timber
+    implementation libs.timber
+
+    implementation platform(libs.walletConnect.bom)
+    implementation("com.walletconnect:android-core", {
+        exclude group: 'org.web3j', module: '*'
+        exclude group: 'org.bouncycastle', module: '*'
+    })
+    implementation("com.walletconnect:web3wallet", {
+        exclude group: 'org.web3j', module: '*'
+        exclude group: 'org.bouncycastle', module: '*'
+    })
+
+    implementation libs.review
+    implementation libs.app.update
+
+    runtimeOnly libs.work.runtime.ktx
+
+    //Analytics
+    //analyticsImplementation libs.play.core
+
+    //analyticsImplementation libs.play.core
+    analyticsImplementation libs.firebase.analytics
+    analyticsImplementation libs.mixpanel.android
+    analyticsImplementation libs.firebase.crashlytics
+
+    // Notifications: NB there appears to be an incompatibility in the newer builds of firebase-messaging.
+    // Update when resolved.
+    //noinspection GradleDependency
+    implementation libs.firebase.messaging
+
+
+    //
+    // Testing libraries
+    //
+
+    // Updating breaks the tests
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.3.0'
+    androidTestImplementation 'androidx.browser:browser:1.8.0'
+
+    // Unit tests
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:3.12.4'
+    testImplementation group: 'org.powermock', name: 'powermock-module-junit4-rule-agent', version: '2.0.9'
+    testImplementation group: 'org.powermock', name: 'powermock-module-junit4', version: '2.0.9'
+    testImplementation group: 'org.powermock', name: 'powermock-api-mockito2', version: '2.0.9'
+    testImplementation group: 'org.json', name: 'json', version: '20240303'
+
+    // Component tests: Updating these appears to break the tests.
+    testImplementation 'org.robolectric:robolectric:4.8.2'
+    testImplementation 'androidx.test:core:1.4.0'
+    testImplementation 'androidx.test.ext:junit:1.1.4'
+
+    // E2e tests: Updating these values breaks the e2e tests. Versioning here is only for tests:
+    // no need to update unless it stops working due to incompatibility
+    androidTestImplementation 'androidx.test:runner:1.5.0-alpha02'
+    androidTestImplementation 'androidx.test:core:1.4.1-alpha05'
+    androidTestUtil 'androidx.test:orchestrator:1.4.2-alpha02'
+    testImplementation 'org.hamcrest:hamcrest:2.1'
+
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.2', {
+        exclude group: "com.android.support", module: "support-annotations"
+    })
+    androidTestImplementation('tools.fastlane:screengrab:2.1.1', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
+}

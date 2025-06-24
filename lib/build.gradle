@@ -1,0 +1,22 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+
+    implementation files('../app/libs/abi-4.9.8.jar')
+    implementation files('../app/libs/core-4.9.8.jar')
+    implementation files('../app/libs/crypto-4.9.8.jar')
+    implementation files('../app/libs/utils-4.9.8.jar')
+
+    testImplementation libs.junit
+
+    implementation libs.bouncycastle.bcprov.jdk15on
+    // https://mvnrepository.com/artifact/com.github.cliftonlabs/json-simple
+    implementation libs.json.simple
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation libs.gson
+}
+
+sourceCompatibility = "17"
+targetCompatibility = "17"
