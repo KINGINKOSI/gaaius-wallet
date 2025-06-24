@@ -7,7 +7,7 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -16,9 +16,9 @@
   "author": "Smart Token Labs",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/GAAIUSWallet/gaaius-wallet-android/issues"
+    "url": "https://github.com/GAAIUSWallet/gaaius-wallet/issues"
   },
-  "homepage": "https://github.com/GAAIUSWallet/gaaius-wallet-android#readme",
+  "homepage": "https://github.com/GAAIUSWallet/gaaius-wallet#readme",
   "dependencies": {
     "normalize.css": "^8.0.0"
   }

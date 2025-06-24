@@ -1,4 +1,7 @@
 name: Run CheckStyle
+permissions:
+  pull-requests: write
+  contents: read
 on: pull_request, merge_group
 
 jobs:
