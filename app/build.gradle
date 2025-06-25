@@ -71,7 +71,8 @@ android {
         buildConfigField "String", XInfuraAPI, DEFAULT_INFURA_API_KEY
         buildConfigField "String", "WALLETCONNECT_PROJECT_ID", DEFAULT_WALLETCONNECT_PROJECT_ID
 
-        buildConfigField "String", "NOTIFICATION_API_BASE_URL", NOTIFICATION_API_BASE_URL
+def DEFAULT_NOTIFICATION_API_BASE_URL = ""https://your.notification.api/""
+buildConfigField "String", "NOTIFICATION_API_BASE_URL", DEFAULT_NOTIFICATION_API_BASE_URL
 
         ndk {
             abiFilters "armeabi-v7a", "x86", "x86_64", "arm64-v8a"
