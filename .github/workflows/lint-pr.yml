@@ -1,5 +1,8 @@
 name: Comments Android lint warnings on pull request
 
+permissions:
+  contents: read
+
 on: pull_request
 
 jobs:
