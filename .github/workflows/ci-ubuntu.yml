@@ -1,20 +1,24 @@
-name: Unit test(Ubuntu)
+name: Unit test (Ubuntu)
+
 on:
   push:
     branches:
       - master
   pull_request:
   merge_group:
+
 jobs:
   test:
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
-    steps:
-      - uses: actions/checkout@v3
 
-      - name: Set up JDK
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           distribution: oracle
@@ -23,11 +27,11 @@ jobs:
       - name: Run unit tests
         run: sh ./build.sh
 
-      - name: Upload Test Reports Folder
+      - name: Upload Unit Test Reports
         uses: actions/upload-artifact@v4
-        if: ${{ always() }} # IMPORTANT: Upload reports regardless of status
+        if: ${{ always() }}  # Ensures upload even if tests fail
         with:
-          name: ut-reports
+          name: unit-test-reports
           path: app/build/reports/tests
 
       - name: Upload coverage reports to Codecov
