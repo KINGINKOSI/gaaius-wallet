@@ -1235,7 +1235,7 @@ public class Utils
 
     public static boolean isGAAIUSWallet(Context context)
     {
-        return context.getPackageName().equals("io.stormbird.wallet");
+        return context.getPackageName().equals("com.gaaiuswallet.app");
     }
 
     //Decode heuristic:

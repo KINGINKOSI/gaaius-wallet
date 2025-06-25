@@ -1,4 +1,3 @@
-
 plugins {
     alias(libs.plugins.androidApplication)
     id("com.worker8.android_lint_reporter") version "2.1.0"
@@ -49,7 +48,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "io.stormbird.wallet"
+        applicationId "com.gaaiuswallet.app"
         minSdk 24
         targetSdk 34
         versionCode 273

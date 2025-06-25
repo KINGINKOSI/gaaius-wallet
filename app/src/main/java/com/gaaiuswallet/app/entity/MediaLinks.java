@@ -7,7 +7,7 @@ public class MediaLinks
 {
     // Update these media platform links and ids to target your media groups,
     // then update the MEDIA_TARGET_APPLICATION to match your applicationId
-    public static final String MEDIA_TARGET_APPLICATION = "io.stormbird.wallet";
+    public static final String MEDIA_TARGET_APPLICATION = "com.gaaiuswallet.app";
     public static final String AWALLET_DISCORD_URL = "https://discord.gg/nbb9VSF85A";
     public static final String AWALLET_TWITTER_ID = "twitter://user?user_id=938624096123764736";
     public static final String AWALLET_FACEBOOK_ID = "fb://page/1958651857482632";
