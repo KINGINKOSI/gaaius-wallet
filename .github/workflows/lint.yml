@@ -1,4 +1,6 @@
 name: Android lint
+permissions:
+  contents: read
 on:
   push:
     branches:
