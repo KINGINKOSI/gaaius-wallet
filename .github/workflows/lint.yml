@@ -1,10 +1,12 @@
 name: Android lint
+
 on:
   push:
     branches:
       - master
   pull_request:
   merge_group:
+
 jobs:
   lint:
     name: Comments lint result on Master
@@ -12,18 +14,23 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 0
-      - name: set up JDK
+          fetch-depth: 0  # Fetch full history, useful for accurate linting
+
+      - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: oracle
           java-version: 21
           cache: gradle
-      - name: Run detekt
+
+      - name: Run detekt (Kotlin static analysis)
         run: ./gradlew :app:detekt
-        continue-on-error: true
+        continue-on-error: true  # Allow workflow to continue even if detekt finds issues
+
       - name: Run Android Lint
         run: ./gradlew :app:lintAnalyticsDebug
