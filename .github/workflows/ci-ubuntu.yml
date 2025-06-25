@@ -1,4 +1,7 @@
 name: Unit test(Ubuntu)
+permissions:
+  contents: read
+  actions: write
 on:
   push:
     branches:
